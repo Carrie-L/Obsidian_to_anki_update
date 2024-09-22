@@ -21,7 +21,7 @@ I:\B-1 笔记\DS & Algorithm\.obsidian\plugins\obsidian-to-anki-plugin
 
 2. 将该笔记模板的`File Link Field` 改为正面问题，`Context Field` 改为反面回答。
 3. 滑动到下面，打开 `Add Obsidian Tags`开关
-![image](https://github.com/user-attachments/assets/77689c58-f7e2-43f2-8ff7-a7c63725bd38)
+![image](https://github.com/user-attachments/assets/24e7ab15-a788-47d5-b804-6cb5a20d1417)
 
 
 ###  添加笔记
