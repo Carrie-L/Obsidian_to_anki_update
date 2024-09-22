@@ -1,0 +1,27 @@
+背面内容模板，添加到<div>后面
+----------------------------------------
+
+<link href="_tokyo-night-dark.css" rel="stylesheet">
+<script src="_highlight.min.js"></script>
+
+<script>hljs.highlightAll();</script>
+
+----------------------------------------
+代码样式CSS：
+
+pre code {
+    background: #1a1b26;
+    color: #9aa5ce;
+    padding: 10px;
+    border-radius: 5px;
+    display: block;
+    white-space: pre-wrap;
+}
+
+code {
+    font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+    font-size: 14px;
+}
+
+
+
