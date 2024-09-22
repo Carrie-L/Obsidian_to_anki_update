@@ -7,7 +7,10 @@
 ```
 I:\B-1 笔记\DS & Algorithm\.obsidian\plugins\obsidian-to-anki-plugin
 ```
-2. 将此`main.js` 替换插件里的 `main.js`
+2. 点击此仓库中的`main.js`，下载，
+替换插件里的 `main.js`
+![image](https://github.com/user-attachments/assets/60aa2377-a3f3-4063-a652-7a63d5274423)
+
 ![image](https://github.com/user-attachments/assets/e31ffc4f-0d48-4618-a539-b6ddd919d087)
 
 ### 自定义正则表达式
