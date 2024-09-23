@@ -25,7 +25,7 @@ I:\B-1 笔记\DS & Algorithm\.obsidian\plugins\obsidian-to-anki-plugin
 
 
 ###  添加笔记
-笔记需以`##`开头，`END`结尾。
+笔记至少以`##`开头，`END`结尾。如果开头没有#，则不会添加成功。
 插件会自动根据自定义正则表达式扫描笔记内容，如果添加到anki成功，会在笔记下方添加一个anki卡片ID。
 
 ### 更新笔记
