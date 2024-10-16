@@ -28,6 +28,75 @@ I:\B-1 笔记\DS & Algorithm\.obsidian\plugins\obsidian-to-anki-plugin
 笔记至少以`##`开头，`END`结尾。如果开头没有#，则不会添加成功。
 插件会自动根据自定义正则表达式扫描笔记内容，如果添加到anki成功，会在笔记下方添加一个anki卡片ID。
 
+### 添加Cloze笔记
+#### 1. Anki操作
+工具 —— 管理笔记模板，添加一个**填空题Cloze**模板，模板名称必须包含"Cloze"！否则无法添加卡片。
+> [!IMPORTANT]
+> 模板名称必须包含`Cloze`!
+
+#### 2. Obsidian操作
+##### 2.1 Regenerate 更新笔记模板 
+打开设置，点击左侧`Community Plugins —— Obsidian_to_Anki`，找到右边页面的`Actions —— Regenerate Note Type Table`，点击`Regenerate`，更新笔记模板。
+
+##### 2.2 Note Type Settings
+点击`Note Type Table`，找到Cloze模板，输入:
+```
+^#{2,}\s*([\s\S]*?)\n()END
+```
+
+##### 2.3 添加Cloze笔记
+Cloze笔记只有**正面内容**，将需要隐藏的内容修改为：`{{c1::这是你的笔记内容}}`。
+请严格遵照这个格式，`{{}}`里只能为`c1`，不能为`c2`,不能为`cloze`，必须有两个冒号`::`，必须有两组大括号`{{}}`，只能创建一张卡片。
+>[!TIP]
+>{{c1::这是你的笔记内容}}
+
+笔记参考示例：
+```
+#### Table
+| 名字 | 姓氏 |
+| ---- | ---- |
+| 麦克斯 | {{c1::普朗克}} |
+| {{c1::玛丽}} | 居里 |
+END
+```
+然后点击同步。
+
+### 添加问答题(输入答案)笔记
+与添加Cloze笔记类似。
+
+#### 1. Anki操作
+工具 —— 管理笔记模板，添加一个 **问答题（输入答案）** 模板，模板名称必须包含"Type"！否则无法添加卡片。
+> [!IMPORTANT]
+> 模板名称必须包含`Type`!
+
+#### 2. Obsidian操作
+##### 2.1 Regenerate 更新笔记模板 
+打开设置，点击左侧`Community Plugins —— Obsidian_to_Anki`，找到右边页面的`Actions —— Regenerate Note Type Table`，点击`Regenerate`，更新笔记模板。
+
+##### 2.2 Note Type Settings
+点击`Note Type Table`，找到Type答案模板，输入:
+```
+^#{2,}(.+)\n*([\s\S]*?)\nEND
+```
+
+##### 2.3 添加Type答案笔记
+此模板为正反面问答题模板，背面内容为`答案`, 格式为: `{{type::你的答案}}`
+>[!TIP]
+>{{type::你的答案}}
+
+参考示例：
+```
+#### 世界上最长的河流是什么？ 
+{{type::尼罗河}}
+END
+```
+显示效果为：
+
+![Snipaste_2024-10-17_03-47-23](https://github.com/user-attachments/assets/40953f6e-045c-41c5-b072-56ddf75bc60f)
+![Snipaste_2024-10-17_03-47-41](https://github.com/user-attachments/assets/93e65780-de8f-47a7-a41b-967892e8f492)
+
+
+
 ### 更新笔记
 如果Obsidian笔记没有更新，插件则不会扫描该笔记。所以如果你需要更新笔记，你至少需要在笔记里做一点改动。
 插件不会添加**问题和回答没有一点变化**的笔记。
