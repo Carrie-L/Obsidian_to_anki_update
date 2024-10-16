@@ -11,7 +11,7 @@
 ```
 I:\B-1 笔记\DS & Algorithm\.obsidian\plugins\obsidian-to-anki-plugin
 ```
-2. 点击右边 **Release**,下载最新版 `main.js`, 或 [点击下载链接](https://github.com/Carrie-L/Obsidian_to_anki_update/releases/download/v1.0.1/main.js)
+2. 点击右边 **Release**,下载最新版 `main.js`
 
 ![Snipaste_2024-10-17_04-27-59](https://github.com/user-attachments/assets/9e1edac3-8be5-43c5-8a66-2db57e05717f)
 ![Snipaste_2024-10-17_04-28-15](https://github.com/user-attachments/assets/209aac88-a7ea-44f6-8fb1-e50ce9714103)
