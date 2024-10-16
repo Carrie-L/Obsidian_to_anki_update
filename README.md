@@ -11,11 +11,13 @@
 ```
 I:\B-1 笔记\DS & Algorithm\.obsidian\plugins\obsidian-to-anki-plugin
 ```
-2. 点击此仓库中的`main.js`，下载，
-替换插件里的 `main.js`
-![image](https://github.com/user-attachments/assets/60aa2377-a3f3-4063-a652-7a63d5274423)
+2. 点击右边 **Release**,下载最新版 `main.js`, 或 [点击下载链接](https://github.com/Carrie-L/Obsidian_to_anki_update/releases/download/v1.0.1/main.js)
 
-![image](https://github.com/user-attachments/assets/e31ffc4f-0d48-4618-a539-b6ddd919d087)
+![Snipaste_2024-10-17_04-27-59](https://github.com/user-attachments/assets/9e1edac3-8be5-43c5-8a66-2db57e05717f)
+![Snipaste_2024-10-17_04-28-15](https://github.com/user-attachments/assets/209aac88-a7ea-44f6-8fb1-e50ce9714103)
+
+
+3. 替换插件里的 `main.js`
 
 ### 自定义正则表达式
 1. Obsidian打开设置，在`Community plugins - Obsidian_to_Anki`里，点击 `Note Type Table`，选择一个笔记模板，在`Custom Regexp`下添加：
