@@ -1,5 +1,9 @@
 # Obsidian_to_anki_update
-修改插件[Obsidian_to_Anki](https://github.com/ObsidianToAnki/Obsidian_to_Anki)中的main.js源码，使其符合我的需求。
+修改插件[Obsidian_to_Anki](https://github.com/ObsidianToAnki/Obsidian_to_Anki)中的main.js源码，使其符合我的需求。为原插件更新了如下功能：
+1. tag添加中文支持
+2. 适配我的正则表达式，使添加卡片的操作更加顺滑
+3. 添加对Cloze卡片的正则支持
+4. 添加对输入答案卡片的正则支持
 
 ## 使用
 ### 替换插件main.js
