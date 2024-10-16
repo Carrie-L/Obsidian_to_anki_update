@@ -1,7 +1,9 @@
 "use strict";
 
+const { log } = require("console");
 var obsidian = require("obsidian");
 var path$1 = require("path");
+const { text } = require("stream/consumers");
 
 const ANKI_PORT = 8765;
 function invoke(action, params = {}) {
@@ -616,20 +618,63 @@ const ANKI_CLOZE_REGEXP = /{{c\d+::[\s\S]+?}}/;
 const CLOZE_ERROR = 42;
 const NOTE_TYPE_ERROR = 69;
 var IS_CLOZE_NOTE = false;
+
+const ANKI_TYPE_ANSWER_REGEXP = /\{\{type::[\s\S]+?}}/;
+var IS_QA_TYPE_ANSWER = false;
+function note_has_type_answer(note) {
+  for (let i in note.fields) {
+    IS_QA_TYPE_ANSWER = ANKI_TYPE_ANSWER_REGEXP.test(note.fields[i]);
+    console.info("IS_QA_TYPE_ANSWER", IS_QA_TYPE_ANSWER, text);
+    if(IS_QA_TYPE_ANSWER) return true;
+  }
+  IS_QA_TYPE_ANSWER = false;
+  return false;
+}
+function has_type_answer(text) {
+  /*Checks whether text actually has cloze deletions.*/
+  return ANKI_TYPE_ANSWER_REGEXP.test(text);
+}
+
+
 function has_clozes(text) {
   /*Checks whether text actually has cloze deletions.*/
   return ANKI_CLOZE_REGEXP.test(text);
 }
+
 function note_has_clozes(note) {
   /*Checks whether a note has cloze deletions in any of its fields.*/
   for (let i in note.fields) {
-    if (has_clozes(note.fields[i])) {
-      IS_CLOZE_NOTE = true;
-      return true;
-    }
+      if (has_clozes(note.fields[i])) {
+        IS_CLOZE_NOTE = true;
+        console.error("has_clozes IS_CLOZE_NOTE true", note.fields[i]);
+        return true;
+      }
   }
+  IS_CLOZE_NOTE = false;
   return false;
 }
+
+
+// function note_has_clozes(note) {
+//   /*Checks whether a note has cloze deletions in any of its fields.*/
+//   IS_CLOZE_NOTE = false;
+//   IS_QA_TYPE_ANSWER = false;
+//   for (let i in note.fields) {
+//     if (has_clozes(note.fields[i])) {
+//       IS_CLOZE_NOTE = true;
+//       IS_QA_TYPE_ANSWER = false;
+//       console.error("has_clozes IS_CLOZE_NOTE true", note.fields[i]);
+//       return true;
+//     }else if(has_type_answer(note.fields[i])){
+//       IS_QA_TYPE_ANSWER = true;
+//       IS_CLOZE_NOTE = false;
+//       console.error("has_type_answer IS_QA_TYPE_ANSWER true", note.fields[i]);
+//       return true;
+//     }
+//   }
+//   return false;
+// }
+
 class AbstractNote {
   text;
   split_text;
@@ -850,6 +895,25 @@ class RegexNote {
       fields[this.field_names[index]] = this.match.slice(1)[index]
         ? this.match.slice(1)[index]
         : "";
+
+      if(has_type_answer(fields[this.field_names[index]])){
+        // 正则表达式，使用 's' 标志使 '.' 匹配换行符
+        const pattern = /\{\{type::(.*?)\}\}/s;
+        const match = fields[this.field_names[index]].match(pattern);
+
+        if (match) {
+            const content = match[1];
+            fields[this.field_names[index]] = content;
+            IS_QA_TYPE_ANSWER = true;
+            console.log("getFields提取的内容：", content);
+        } else {
+          IS_QA_TYPE_ANSWER = false;
+            console.log("getFields未找到匹配项。");
+        }
+      }
+      console.log("**getFields1: field_name=", this.field_names[index], "field =", fields[this.field_names[index]]);
+      
+
     }
 
     for (let key in fields) {
@@ -862,11 +926,11 @@ class RegexNote {
           this.highlights_to_cloze
         )
         .trim();
-      // if(fields[key]==""){
-        
+        console.log("**getFields2: key=", key, "field =", fields[key]);
+      // if(fields[key]==""){       
       //   const nameWithoutExtension = currentPath.replace(/\.[^/.]+$/, "");  // 去掉最后的扩展名
       //   fields[key] = nameWithoutExtension;
-      //   console.info(">>key",key,"nameWithoutExtension", nameWithoutExtension);
+      //   // console.info(">>key",key,"nameWithoutExtension", nameWithoutExtension);
       // }  
     }
     return fields;
@@ -895,11 +959,14 @@ class RegexNote {
       const context_field = data.context_fields[this.note_type];
       template["fields"][context_field] += context;
     }
-    let isClozeNote = note_has_clozes(template)
-    if (this.note_type.toLowerCase().includes("cloze") && !isClozeNote) {
+
+    note_has_clozes(template);
+    if (this.note_type.toLowerCase().includes("cloze") && !IS_CLOZE_NOTE) {
       this.identifier = CLOZE_ERROR; //An error code that says "don't add this note!"
-    }else if (this.note_type.toLowerCase().includes("cloze") && isClozeNote) {
+    }else if (this.note_type.toLowerCase().includes("cloze") && IS_CLOZE_NOTE) {
       console.log("THIS IS A CLOZE!")
+    }else if (!this.note_type.toLowerCase().includes("cloze") && IS_QA_TYPE_ANSWER) {
+      console.log("THIS IS_QA_TYPE_ANSWER!")
     }
     if (data.add_obs_tags) {
       for (let key in template["fields"]) {
@@ -70207,20 +70274,34 @@ class AllFile extends AbstractFile {
         this.data.add_context ? this.getContextAtIndex(match.index) : ""
       );
 
+      console.error("IS_CLOZE_NOTE ", IS_CLOZE_NOTE, "IS_QA_TYPE_ANSWER ", IS_QA_TYPE_ANSWER);
+      var clozeModel = parsed.note.modelName.toLowerCase().includes("cloze");
+      var typeModel = parsed.note.modelName.toLowerCase().includes("type");
+
       if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
         if (parsed.identifier == CLOZE_ERROR) {
           // This means it wasn't actually a note! So we should remove it from ignore_spans
           this.ignore_spans.pop();
           continue;
-        }
+        }     
 
-        if (parsed.note.modelName.toLowerCase().includes("cloze") && IS_CLOZE_NOTE) {
+        if (clozeModel && IS_CLOZE_NOTE) {
           console.info("---add cloze card---",parsed)
           // 只有当note_type为Cloze且fields里有{::}时，才添加
           parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
           this.regex_notes_to_add.push(parsed.note);
           this.regex_id_indexes.push(match.index + match[0].length);
-        } else if (!parsed.note.modelName.toLowerCase().includes("cloze") && !IS_CLOZE_NOTE) {
+        }
+        else if(!clozeModel && IS_CLOZE_NOTE){
+            console.info("Cloze Note in QA , skip add",parsed);
+        } 
+        else if(typeModel && IS_QA_TYPE_ANSWER){
+           console.info("Type Answer Note in QA , add",parsed.note );
+           parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
+          this.regex_notes_to_add.push(parsed.note);
+          this.regex_id_indexes.push(match.index + match[0].length);
+        }
+        else if (!clozeModel && !typeModel && !IS_CLOZE_NOTE && !IS_QA_TYPE_ANSWER) {
           console.info("---add QA card---",parsed.note.fields.Question,parsed)
           // 只有当note_type不为Cloze且fields里没有{::}时，才添加
           parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
@@ -70230,13 +70311,24 @@ class AllFile extends AbstractFile {
       } else {
         // console.info("Note with id",
         //   parsed.identifier,"exist, edit card", parsed.note.fields.Question);
-        if (parsed.note.modelName.toLowerCase().includes("cloze") && IS_CLOZE_NOTE) {
+        if (clozeModel && IS_CLOZE_NOTE) {
                   console.info("Cloze Note with id",
           parsed.identifier,"exist, edit card", parsed.note.fields.Question);
           this.notes_to_edit.push(parsed);
-        }else if (!parsed.note.modelName.toLowerCase().includes("cloze") && !IS_CLOZE_NOTE) {
+        }else if(!clozeModel && IS_CLOZE_NOTE){
+            console.info("Cloze Note in QA , skip edit", parsed);
+        }else if(typeModel && IS_QA_TYPE_ANSWER){
+          this.notes_to_edit.push(parsed);
+          console.info("TYPE_ANSWER Note with id",
+            parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+        }
+        else if (!clozeModel && !typeModel && !IS_CLOZE_NOTE && !IS_QA_TYPE_ANSWER) {
           this.notes_to_edit.push(parsed);
           console.info("QA Note with id",
+            parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+        }else{
+          this.notes_to_edit.push(parsed);
+          console.info("-Note with id",
             parsed.identifier,"exist, edit card", parsed.note.fields.Question);
         }
       }
@@ -72917,3 +73009,4 @@ class MyPlugin extends obsidian.Plugin {
 }
 
 module.exports = MyPlugin;
+
