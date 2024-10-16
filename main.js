@@ -255,6 +255,9 @@ class SettingsTab extends obsidian.PluginSettingTab {
     if (!plugin.settings.hasOwnProperty("CONTEXT_FIELDS")) {
       plugin.settings.CONTEXT_FIELDS = {};
     }
+
+    console.info("plugin.note_types", plugin.note_types);
+
     for (let note_type of plugin.note_types) {
       let row = main_body.insertRow();
       row.insertCell();
@@ -612,6 +615,7 @@ const OBS_TAG_REGEXP = /#([\w\u4e00-\u9fa5]+)/g;
 const ANKI_CLOZE_REGEXP = /{{c\d+::[\s\S]+?}}/;
 const CLOZE_ERROR = 42;
 const NOTE_TYPE_ERROR = 69;
+var IS_CLOZE_NOTE = false;
 function has_clozes(text) {
   /*Checks whether text actually has cloze deletions.*/
   return ANKI_CLOZE_REGEXP.test(text);
@@ -620,6 +624,7 @@ function note_has_clozes(note) {
   /*Checks whether a note has cloze deletions in any of its fields.*/
   for (let i in note.fields) {
     if (has_clozes(note.fields[i])) {
+      IS_CLOZE_NOTE = true;
       return true;
     }
   }
@@ -666,6 +671,7 @@ class AbstractNote {
     this.highlights_to_cloze = highlights_to_cloze;
   }
   parse(deck, url, frozen_fields_dict, data, context) {
+    console.info("------parse1-----")
     let template = JSON.parse(JSON.stringify(data.template));
     template["modelName"] = this.note_type;
     if (this.no_note_type) {
@@ -747,7 +753,7 @@ class Note extends AbstractNote {
       fields[key] = this.formatter
         .format(
           fields[key].trim(),
-          this.note_type.includes("Cloze") && this.curly_cloze,
+          this.note_type.toLowerCase().includes("cloze") && this.curly_cloze,
           this.highlights_to_cloze
         )
         .trim();
@@ -796,7 +802,7 @@ class InlineNote extends AbstractNote {
       fields[key] = this.formatter
         .format(
           fields[key].trim(),
-          this.note_type.includes("Cloze") && this.curly_cloze,
+          this.note_type.toLowerCase().includes("cloze") && this.curly_cloze,
           this.highlights_to_cloze
         )
         .trim();
@@ -852,15 +858,16 @@ class RegexNote {
       fields[key] = this.formatter
         .format(
           fields[key].trim(),
-          this.note_type.includes("Cloze") && this.curly_cloze,
+          this.note_type.toLowerCase().includes("cloze") && this.curly_cloze,
           this.highlights_to_cloze
         )
         .trim();
-
-      if(fields[key]==""){
-        const nameWithoutExtension = currentPath.replace(/\.[^/.]+$/, "");  // 去掉最后的扩展名
-        fields[key] = nameWithoutExtension;
-      }  
+      // if(fields[key]==""){
+        
+      //   const nameWithoutExtension = currentPath.replace(/\.[^/.]+$/, "");  // 去掉最后的扩展名
+      //   fields[key] = nameWithoutExtension;
+      //   console.info(">>key",key,"nameWithoutExtension", nameWithoutExtension);
+      // }  
     }
     return fields;
   }
@@ -869,6 +876,8 @@ class RegexNote {
     template["modelName"] = this.note_type;
     template["fields"] = this.getFields();
     const file_link_fields = data.file_link_fields;
+
+
     if (url) {
       this.formatter.format_note_with_url(
         template,
@@ -886,8 +895,11 @@ class RegexNote {
       const context_field = data.context_fields[this.note_type];
       template["fields"][context_field] += context;
     }
-    if (this.note_type.includes("Cloze") && !note_has_clozes(template)) {
+    let isClozeNote = note_has_clozes(template)
+    if (this.note_type.toLowerCase().includes("cloze") && !isClozeNote) {
       this.identifier = CLOZE_ERROR; //An error code that says "don't add this note!"
+    }else if (this.note_type.toLowerCase().includes("cloze") && isClozeNote) {
+      console.log("THIS IS A CLOZE!")
     }
     if (data.add_obs_tags) {
       for (let key in template["fields"]) {
@@ -909,6 +921,7 @@ class RegexNote {
 }
 
 async function settingToData(app, settings, fields_dict) {
+  console.info("settingToData>>> ", fields_dict);
   let result = {};
   //Some processing required
   result.vault_name = app.vault.getName();
@@ -70050,6 +70063,7 @@ class AllFile extends AbstractFile {
   }
   scanNotes() {
     for (let note_match of this.file.matchAll(this.data.NOTE_REGEXP)) {
+      console.info("this.data.NOTE_REGEXP === ", this.data.NOTE_REGEXP)
       let [note, position] = [
         note_match[1],
         note_match.index +
@@ -70070,11 +70084,27 @@ class AllFile extends AbstractFile {
         this.data,
         this.data.add_context ? this.getContextAtIndex(note_match.index) : ""
       );
+
+      // this.note_type.includes("Cloze") && !note_has_clozes(template)
       if (parsed.identifier == null) {
+        if (parsed.note.modelName.toLowerCase().includes("cloze") && IS_CLOZE_NOTE) {
+          console.info("---add cloze card---")
+          // 只有当note_type为Cloze且fields里有{::}时，才添加
+          parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
+          this.notes_to_add.push(parsed.note);
+          this.id_indexes.push(position);
+        } else if (!parsed.note.modelName.toLowerCase().includes("cloze") && !IS_CLOZE_NOTE) {
+          console.info("---add QA card---")
+          // 只有当note_type不为Cloze且fields里没有{::}时，才添加
+          parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
+          this.notes_to_add.push(parsed.note);
+          this.id_indexes.push(position);
+        }
+
         // Need to make sure global_tags get added
-        parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
-        this.notes_to_add.push(parsed.note);
-        this.id_indexes.push(position);
+        // parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
+        // this.notes_to_add.push(parsed.note);
+        // this.id_indexes.push(position);
       } else if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
         if (parsed.identifier == CLOZE_ERROR) {
           continue;
@@ -70151,6 +70181,7 @@ class AllFile extends AbstractFile {
     //ignoring matches inside ignore_spans,
     //and adding any matches to ignore_spans.
 
+    console.warn("note_type", note_type, "regexp_str", regexp_str)
     let search_id = true;
     let search_tags = true;
 
@@ -70175,7 +70206,6 @@ class AllFile extends AbstractFile {
         this.data,
         this.data.add_context ? this.getContextAtIndex(match.index) : ""
       );
-      console.info("++parsed++", parsed);
 
       if (!this.data.EXISTING_IDS.includes(parsed.identifier)) {
         if (parsed.identifier == CLOZE_ERROR) {
@@ -70183,17 +70213,32 @@ class AllFile extends AbstractFile {
           this.ignore_spans.pop();
           continue;
         }
-        console.warn(
-          "Note with id",parsed.identifier," in file ",this.path," does not exist in Anki, add new card",parsed.note.fields.Question
-);
 
-        parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
-        this.regex_notes_to_add.push(parsed.note);
-        this.regex_id_indexes.push(match.index + match[0].length);
+        if (parsed.note.modelName.toLowerCase().includes("cloze") && IS_CLOZE_NOTE) {
+          console.info("---add cloze card---",parsed)
+          // 只有当note_type为Cloze且fields里有{::}时，才添加
+          parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
+          this.regex_notes_to_add.push(parsed.note);
+          this.regex_id_indexes.push(match.index + match[0].length);
+        } else if (!parsed.note.modelName.toLowerCase().includes("cloze") && !IS_CLOZE_NOTE) {
+          console.info("---add QA card---",parsed.note.fields.Question,parsed)
+          // 只有当note_type不为Cloze且fields里没有{::}时，才添加
+          parsed.note.tags.push(...this.global_tags.split(TAG_SEP));
+          this.regex_notes_to_add.push(parsed.note);
+          this.regex_id_indexes.push(match.index + match[0].length);
+        }
       } else {
-        this.notes_to_edit.push(parsed);
-        console.info("Note with id",
+        // console.info("Note with id",
+        //   parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+        if (parsed.note.modelName.toLowerCase().includes("cloze") && IS_CLOZE_NOTE) {
+                  console.info("Cloze Note with id",
           parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+          this.notes_to_edit.push(parsed);
+        }else if (!parsed.note.modelName.toLowerCase().includes("cloze") && !IS_CLOZE_NOTE) {
+          this.notes_to_edit.push(parsed);
+          console.info("QA Note with id",
+            parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+        }
       }
     }
   }
