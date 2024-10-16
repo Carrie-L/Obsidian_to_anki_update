@@ -646,7 +646,7 @@ function note_has_clozes(note) {
   for (let i in note.fields) {
       if (has_clozes(note.fields[i])) {
         IS_CLOZE_NOTE = true;
-        console.error("has_clozes IS_CLOZE_NOTE true", note.fields[i]);
+        // console.error("has_clozes IS_CLOZE_NOTE true", note.fields[i]);
         return true;
       }
   }
@@ -905,15 +905,13 @@ class RegexNote {
             const content = match[1];
             fields[this.field_names[index]] = content;
             IS_QA_TYPE_ANSWER = true;
-            console.log("getFields提取的内容：", content);
+            console.log("输入答案内容：", content);
         } else {
-          IS_QA_TYPE_ANSWER = false;
-            console.log("getFields未找到匹配项。");
+           IS_QA_TYPE_ANSWER = false;
+            console.log("getFields未找到匹配的输入答案内容。");
         }
       }
-      console.log("**getFields1: field_name=", this.field_names[index], "field =", fields[this.field_names[index]]);
       
-
     }
 
     for (let key in fields) {
@@ -926,7 +924,6 @@ class RegexNote {
           this.highlights_to_cloze
         )
         .trim();
-        console.log("**getFields2: key=", key, "field =", fields[key]);
       // if(fields[key]==""){       
       //   const nameWithoutExtension = currentPath.replace(/\.[^/.]+$/, "");  // 去掉最后的扩展名
       //   fields[key] = nameWithoutExtension;
@@ -70074,7 +70071,7 @@ class AbstractFile {
           parsed.note.tags.join(" ") + " " + this.global_tags
         )
       );
-      console.info("tags: ",parsed.note.tags, this.global_tags,parsed.note.tags.join(" ") + " " + this.global_tags);
+      // console.info("tags: ",parsed.note.tags, this.global_tags,parsed.note.tags.join(" ") + " " + this.global_tags);
     }
     return multi(actions);
   }
@@ -70274,7 +70271,7 @@ class AllFile extends AbstractFile {
         this.data.add_context ? this.getContextAtIndex(match.index) : ""
       );
 
-      console.error("IS_CLOZE_NOTE ", IS_CLOZE_NOTE, "IS_QA_TYPE_ANSWER ", IS_QA_TYPE_ANSWER);
+      // console.error("IS_CLOZE_NOTE ", IS_CLOZE_NOTE, "IS_QA_TYPE_ANSWER ", IS_QA_TYPE_ANSWER);
       var clozeModel = parsed.note.modelName.toLowerCase().includes("cloze");
       var typeModel = parsed.note.modelName.toLowerCase().includes("type");
 
@@ -70312,24 +70309,24 @@ class AllFile extends AbstractFile {
         // console.info("Note with id",
         //   parsed.identifier,"exist, edit card", parsed.note.fields.Question);
         if (clozeModel && IS_CLOZE_NOTE) {
-                  console.info("Cloze Note with id",
-          parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+                  // console.info("Cloze Note with id",
+          // parsed.identifier,"exist, edit card", parsed.note.fields.Question);
           this.notes_to_edit.push(parsed);
         }else if(!clozeModel && IS_CLOZE_NOTE){
-            console.info("Cloze Note in QA , skip edit", parsed);
+            // console.info("Cloze Note in QA , skip edit", parsed);
         }else if(typeModel && IS_QA_TYPE_ANSWER){
           this.notes_to_edit.push(parsed);
-          console.info("TYPE_ANSWER Note with id",
-            parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+          // console.info("TYPE_ANSWER Note with id",
+            // parsed.identifier,"exist, edit card", parsed.note.fields.Question);
         }
         else if (!clozeModel && !typeModel && !IS_CLOZE_NOTE && !IS_QA_TYPE_ANSWER) {
           this.notes_to_edit.push(parsed);
-          console.info("QA Note with id",
-            parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+          // console.info("QA Note with id",
+          //   parsed.identifier,"exist, edit card", parsed.note.fields.Question);
         }else{
           this.notes_to_edit.push(parsed);
-          console.info("-Note with id",
-            parsed.identifier,"exist, edit card", parsed.note.fields.Question);
+          // console.info("-Note with id",
+          //   parsed.identifier,"exist, edit card", parsed.note.fields.Question);
         }
       }
     }
